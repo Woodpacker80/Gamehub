@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Wheel of Words</title>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Oswald:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="root">
+
+<!-- ═══ TITLE SCREEN ═══ -->
+<div class="screen active" id="screen-title">
+  <div class="title-stars" id="title-stars"></div>
+  <div class="title-badge">
+    <div class="title-top">★ The Classic Word Game ★</div>
+    <div class="title-main">
+      <div class="t-of">WHEEL OF</div>
+      <div class="t-fortune">WORDS</div>
+    </div>
+    <div class="title-divider"></div>
+
+    <div class="title-section-label">How many rounds?</div>
+    <div class="opt-row" id="rounds-sel">
+      <div class="opt-btn sel" data-r="3">3</div>
+      <div class="opt-btn"     data-r="5">5</div>
+      <div class="opt-btn"     data-r="7">7</div>
+    </div>
+
+    <div class="title-section-label">Difficulty</div>
+    <div class="opt-row" id="diff-sel">
+      <div class="opt-btn easy" data-d="easy">🟢 Easy</div>
+      <div class="opt-btn medium sel" data-d="medium">🟡 Medium</div>
+      <div class="opt-btn hard"  data-d="hard">🔴 Hard</div>
+    </div>
+
+    <button class="btn-start" onclick="startGame()">▶ SPIN TO WIN</button>
+  </div>
+</div>
+
+<!-- ═══ GAME SCREEN ═══ -->
+<div class="screen" id="screen-game">
+
+  <!-- Header always at top -->
+  <div class="game-header">
+    <div class="hdr-top">
+      <div class="logo-sm">Wheel of Words</div>
+      <div class="hdr-right">
+        <div class="round-pill" id="round-pill">Round 1</div>
+        <div class="diff-badge medium" id="diff-badge">Medium</div>
+        <button class="mute-btn" id="mute-btn" onclick="toggleMute()" aria-label="Toggle Sound" title="Toggle Sound">🔊</button>
+        <button class="menu-btn" id="menu-btn" onclick="toggleMenu(event)" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="menu-dropdown" id="menu-dropdown">
+          <button class="menu-item" onclick="menuRules()">📋 How to Play</button>
+          <button class="menu-item" onclick="menuPlayAgain()">▶ Play Again</button>
+          <button class="menu-item menu-item-quit" onclick="menuQuit()">✕ Quit</button>
+        </div>
+      </div>
+    </div>
+    <div class="scorecards">
+      <div class="scorecard active-turn" id="sc-player">
+        <div class="sc-name"><span class="sc-dot"></span>YOU</div>
+        <div class="sc-round" id="p-round">$0</div>
+        <div class="sc-total" id="p-total">Total $0</div>
+      </div>
+      <div class="scorecard" id="sc-comp">
+        <div class="sc-name"><span class="sc-dot"></span>COMPUTER</div>
+        <div class="sc-round" id="c-round">$0</div>
+        <div class="sc-total" id="c-total">Total $0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body: single column on mobile, two columns on desktop -->
+  <div class="game-body" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+
+    <div class="col-left" style="display:flex;flex-direction:column;">
+
+      <div class="puzzle-area">
+        <div class="cat-tag" id="cat-display">Category</div>
+        <div class="puzzle-grid" id="puzzle-grid"></div>
+      </div>
+
+      <div class="wheel-section">
+        <div class="wheel-wrap" id="wheel-wrap">
+          <svg class="wheel-arrow" width="24" height="26" viewBox="0 0 24 26">
+            <polygon points="12,2 22,24 12,20 2,24" fill="#e63946" stroke="#0b0b14" stroke-width="1.5"/>
+          </svg>
+          <canvas id="wheel-canvas"></canvas>
+          <div class="wheel-hub" id="wheel-hub"></div>
+        </div>
+        <div class="spin-banner empty" id="spin-banner"></div>
+        <div class="think-bar" id="think-bar">
+          <div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>
+          <span style="margin-left:4px">Computer thinking</span>
+        </div>
+      </div>
+
+    </div><!-- /col-left -->
+
+    <div class="col-right" style="display:flex;flex-direction:column;">
+      <div class="controls">
+        <div class="action-btns">
+          <button class="action-btn btn-spin"        id="btn-spin"  onclick="handleSpin()">🎰 SPIN</button>
+          <button class="action-btn btn-vowel"        id="btn-vowel" onclick="handleBuyVowel()" disabled>BUY VOWEL<br><small>$250</small></button>
+          <button class="action-btn btn-solve-action" id="btn-solve" onclick="openSolveModal()">✓ SOLVE</button>
+        </div>
+        <div class="keyboard" id="keyboard"></div>
+        <div class="kb-hint">⌨ Use your physical keyboard to guess letters</div>
+      </div>
+    </div><!-- /col-right -->
+
+  </div><!-- /game-body -->
+
+</div><!-- /screen-game -->
+
+</div><!-- /#root -->
+
+<!-- ═══ RULES MODAL ═══ -->
+<div class="modal-overlay" id="modal-rules">
+  <div class="rules-modal-box">
+    <div class="modal-title" style="font-size:22px;margin-bottom:4px;">📋 How to Play</div>
+    <div style="text-align:center;font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:16px;text-transform:uppercase;">Wheel of Words</div>
+
+    <div class="rules-section">
+      <div class="rules-section-title">🎯 Objective</div>
+      <div class="rules-item"><span class="ri">🏆</span><span>Guess the hidden puzzle and earn as much money as possible. The player with the most money at the end of all rounds wins!</span></div>
+    </div>
+    <div class="rules-section">
+      <div class="rules-section-title">🔄 How a Turn Works</div>
+      <div class="rules-item"><span class="ri">1️⃣</span><span>Press <span class="rules-chip chip-gold">🎰 SPIN</span> to spin the wheel and land on a dollar value.</span></div>
+      <div class="rules-item"><span class="ri">2️⃣</span><span>Choose a <strong>consonant</strong>. Each time it appears in the puzzle you earn that dollar amount.</span></div>
+      <div class="rules-item"><span class="ri">3️⃣</span><span>A correct guess lets you spin again or buy a vowel. A wrong guess passes the turn.</span></div>
+    </div>
+    <div class="rules-section">
+      <div class="rules-section-title">🔤 Buying Vowels</div>
+      <div class="rules-item"><span class="ri">💵</span><span>Buying a vowel (A, E, I, O, U) costs <span class="rules-chip chip-blue">$250</span>. Vowels don't earn money but help crack the puzzle.</span></div>
+      <div class="rules-item"><span class="ri">💡</span><span>You can only buy a vowel if you have at least $250 in your round pot.</span></div>
+    </div>
+    <div class="rules-section">
+      <div class="rules-section-title">✅ Solving the Puzzle</div>
+      <div class="rules-item"><span class="ri">🧠</span><span>Think you know it? Press <span class="rules-chip chip-green">✓ SOLVE</span> and type the full answer. Correct = you win the round! Wrong = opponent's turn.</span></div>
+      <div class="rules-item"><span class="ri">⌨️</span><span>Type plain letters only — no accents or diacritics. For example, type <strong>E</strong> instead of <strong>É</strong>.</span></div>
+    </div>
+    <div class="rules-section">
+      <div class="rules-section-title">⚠️ Special Wheel Segments</div>
+      <div class="rules-item"><span class="ri">💸</span><span><span class="rules-chip chip-red">BANKRUPT</span> — Lose all round earnings. Turn passes to opponent.</span></div>
+      <div class="rules-item"><span class="ri">😬</span><span><span class="rules-chip chip-red">LOSE</span> — Lose your turn. Round earnings stay safe.</span></div>
+      <div class="rules-item"><span class="ri">🔻</span><span><span class="rules-chip chip-red">MINUS</span> — Lose 50% of your round earnings. Ouch!</span></div>
+      <div class="rules-item"><span class="ri">⭐</span><span><span class="rules-chip chip-gold">BONUS</span> — Land on it and guess a correct consonant to collect +$2,500 (Silver tile) or +$5,000 (Gold tile)!</span></div>
+      <div class="rules-item"><span class="ri">🃏</span><span><span class="rules-chip chip-blue">JOKER</span> — A random letter from the puzzle is revealed and you earn a flat <strong>$1,000</strong> bonus. Your turn continues — spin again or solve!</span></div>
+    </div>
+    <div class="rules-section">
+      <div class="rules-section-title">⭐ Silver Rounds</div>
+      <div class="rules-item"><span class="ri">🥈</span><span>In later rounds a silver <strong>BONUS</strong> tile (+$2,500) appears on the wheel — look for the silver tile with gold lettering. Land on it and guess a correct consonant to collect it!</span></div>
+      <div class="rules-item"><span class="ri">🔻</span><span>Silver rounds also add a <strong>Minus</strong> tile — landing on it costs you 50% of your round earnings!</span></div>
+    </div>
+    <div class="rules-section">
+      <div class="rules-section-title">👑 Gold Rounds</div>
+      <div class="rules-item"><span class="ri">🥇</span><span>The final rounds go Gold! A gold <strong>BONUS</strong> tile (+$5,000) with silver lettering lands next to Bankrupt, and a silver <strong>BONUS</strong> tile (+$2,500) with gold lettering is also on the wheel — two chances to strike it rich!</span></div>
+      <div class="rules-item"><span class="ri">💰</span><span>Vowels cost <span class="rules-chip chip-blue">$500</span> in Gold rounds. Two Minus tiles are on the wheel — stay sharp!</span></div>
+    </div>
+    <div class="rules-section">
+      <div class="rules-section-title">⚡ Guess First!</div>
+      <div class="rules-item"><span class="ri">⚡</span><span>If no consonants remain and neither player can afford a vowel, <strong>Guess First</strong> kicks in! Remaining vowels are revealed one by one — be the first to solve it!</span></div>
+      <div class="rules-item"><span class="ri">⏱️</span><span>You have a few seconds after each reveal to press <span class="rules-chip chip-green">✓ SOLVE</span> before the next vowel drops.</span></div>
+    </div>
+    <div class="rules-section">
+      <div class="rules-section-title">🎮 Rounds & Winning</div>
+      <div class="rules-item"><span class="ri">🔁</span><span>Choose 3, 5, or 7 rounds before the game starts. Based on difficulty, some letters are pre-revealed at the start of each round.</span></div>
+      <div class="rules-item"><span class="ri">🏅</span><span>After all rounds, the player with the <strong>highest total</strong> wins!</span></div>
+    </div>
+    <div class="rules-section">
+      <div class="rules-section-title">⌨️ Pro Tip</div>
+      <div class="rules-item"><span class="ri">💻</span><span>On desktop you can use your <strong>physical keyboard</strong> to guess letters — no clicking required!</span></div>
+    </div>
+
+
+
+    <button class="modal-btn mbtn-ok" style="width:100%;margin-top:4px;" onclick="closeRulesModal()">✓ GOT IT!</button>
+  </div>
+</div>
+
+<!-- ═══ GUESS FIRST MODAL ═══ -->
+<div class="modal-overlay" id="modal-sd">
+  <div class="modal-box" style="text-align:center;">
+    <div style="font-size:54px;margin-bottom:10px;">⚡</div>
+    <div class="modal-title" style="font-size:22px;">Guess First!</div>
+    <div class="modal-sub">No consonants left and nobody can afford a vowel. Remaining vowels will be revealed one by one. <strong style="color:var(--gold)">Solve as soon as you know it!</strong></div>
+    <button class="modal-btn mbtn-ok" style="width:100%" onclick="startSdReveal()">⚡ GO!</button>
+  </div>
+</div>
+
+<!-- ═══ SOLVE MODAL ═══ -->
+<div class="modal-overlay" id="modal-solve">
+  <div class="modal-box">
+    <div class="modal-title">Solve It!</div>
+    <div class="modal-sub">Type the complete puzzle answer</div>
+    <input class="modal-input" id="solve-input" type="text" placeholder="Your answer…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="text" enterkeyhint="done">
+    <div class="modal-btns">
+      <button class="modal-btn mbtn-ok" onclick="submitSolve()">SUBMIT</button>
+      <button class="modal-btn mbtn-cancel" onclick="closeSolveModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RESULT MODAL ═══ -->
+<div class="modal-overlay" id="modal-result">
+  <div class="modal-box">
+    <div class="result-icon" id="res-icon">🎉</div>
+    <div class="modal-title" id="res-title">You Got It!</div>
+    <div class="modal-sub" id="res-sub"></div>
+    <div class="result-answer" id="res-answer"></div>
+    <button class="modal-btn mbtn-ok" style="width:100%" onclick="continueAfterResult()">CONTINUE →</button>
+  </div>
+</div>
+
+<!-- ═══ GAME OVER MODAL ═══ -->
+<div class="modal-overlay" id="modal-go">
+  <div class="modal-box">
+    <div class="result-icon" id="go-icon">🏆</div>
+    <div class="modal-title" id="go-title">Game Over!</div>
+    <div class="modal-sub" id="go-sub"></div>
+    <div class="final-scores">
+      <div class="fsc" id="go-p"><div class="fsc-name">YOU</div><div class="fsc-score" id="go-ps">$0</div><div class="fsc-lbl">TOTAL</div></div>
+      <div class="fsc" id="go-c"><div class="fsc-name">COMPUTER</div><div class="fsc-score" id="go-cs">$0</div><div class="fsc-lbl">TOTAL</div></div>
+    </div>
+    <button class="modal-btn mbtn-ok"     style="width:100%;margin-bottom:8px;" onclick="playAgain()">▶ PLAY AGAIN</button>
+    <button class="modal-btn mbtn-cancel" style="width:100%;color:var(--red);border-color:rgba(230,57,70,0.3);" onclick="gameOverQuit()">✕ QUIT</button>
+  </div>
+</div>
+
+<!-- ═══ QUIT / THANK YOU SCREEN ═══ -->
+<div id="screen-quit">
+  <div id="balloons-container" style="position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden;"></div>
+  <div class="quit-box">
+    <div class="quit-emoji">🎈🎉🎈</div>
+    <div class="quit-thank">Thank you for playing our game</div>
+    <div class="quit-divider"></div>
+    <div class="quit-regards">Kind regards,<strong>Claude A.I &amp; MH Oddens</strong></div>
+    <button class="btn-start" id="quit-play-btn" style="font-size:15px;padding:12px;opacity:0;" onclick="quitToTitle()">▶ PLAY AGAIN</button>
+  </div>
+</div>
+
+<script src="puzzles.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
